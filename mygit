@@ -69,9 +69,9 @@ def printDiff(diff):
     # print the difference between two files
     for step in diff[::-1]:
         if(step[0]):
-            print("> "+step[3]),
+            print("+ "+step[3]),
         else:
-            print("< "+step[3]),
+            print("- "+step[3]),
 
 if __name__ == "__main__":
     # setup
@@ -80,14 +80,14 @@ if __name__ == "__main__":
     currentVersion=0 # The version number of the current file
     if(len(sys.argv)<3):
         print("Syntax error! Please use the syntax:")
-        print('  ./pygit [diff|add|log|rollback|rollnext|checkout] <file>')
+        print('  ./mygit [diff|add|log|rollback|rollnext|checkout] <file>')
         sys.exit()
     fileName = sys.argv[2]
-    if(not os.path.isdir('.pygit')):
-        os.mkdir('.pygit')
-    # The diff versions of individual files are saved as an object in the .pygit directory
-    if(os.path.isfile('.pygit/'+fileName)):
-        with open('.pygit/'+fileName,'r') as fh:
+    if(not os.path.isdir('.mygit')):
+        os.mkdir('.mygit')
+    # The diff versions of individual files are saved as an object in the .mygit directory
+    if(os.path.isfile('.mygit/'+fileName)):
+        with open('.mygit/'+fileName,'r') as fh:
             metaObject=json.load(fh)
         diffHistory=metaObject["diffHistory"]
         fileCurrent=metaObject["fileCurrent"]
@@ -144,10 +144,10 @@ if __name__ == "__main__":
                 fh.write(line)
     else:
         print("Syntax error! Please use the syntax:")
-        print('  ./pygit [diff|add|log|rollback|rollnext|checkout] <file>')
+        print('  ./mygit [diff|add|log|rollback|rollnext|checkout] <file>')
 
     # Save the changes
-    with open('.pygit/'+fileName,'w+') as fh:
+    with open('.mygit/'+fileName,'w+') as fh:
         metaObject = {"diffHistory":diffHistory,"fileCurrent":fileCurrent,"currentVersion":currentVersion}
         json.dump(metaObject,fh)
 

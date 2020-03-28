@@ -59,28 +59,24 @@ The `mygit log` command shows the changes to the files, and the current version 
 % mygit log fib.py    
 
 Version #: 1
-> def fib(n):
->   if(n<2):
->     return 1
->   return fib(n-1)+fib(n-2)
++ def fib(n):
++   if(n<2):
++     return 1
++   return fib(n-1)+fib(n-2)
 
 Current version: 1
 ```
 
-Make change to the `fib.py`. The `mygit diff` shows the changes made to this file. The `>` denotes the lines added, the `<` denotes the lines removed. 
+Make change to the `fib.py`. The `mygit diff` shows the changes made to this file. The `+` denotes the lines added, the `-` denotes the lines removed. 
 ```
 % mygit diff fib.py              
-> #!/usr/bin/python
-> 
-> def fib(n,cache):
->   if(n in cache):
->     return cache[n]
-< def fib(n):
->   cache[n]= fib(n-1,cache)+fib(n-2,cache)
->   return cache[n]
-> 
-> 
-<   return fib(n-1)+fib(n-2)
++ def fib(n,cache):
++   if(n in cache):
++     return cache[n]
+- def fib(n):
++   cache[n]= fib(n-1,cache)+fib(n-2,cache)
++   return cache[n]
+-   return fib(n-1)+fib(n-2)
 ```
 
 After adding the file using `mygit add`, you can read the updates using `mygit log` command
@@ -89,19 +85,19 @@ After adding the file using `mygit add`, you can read the updates using `mygit l
 % mygit log fib.py    
 
 Version #: 1
-> def fib(n):
->   if(n<2):
->     return 1
->   return fib(n-1)+fib(n-2)
++ def fib(n):
++   if(n<2):
++     return 1
++   return fib(n-1)+fib(n-2)
 
 Version #: 2
-> def fib(n,cache):
->   if(n in cache):
->     return cache[n]
-< def fib(n):
->   cache[n]= fib(n-1,cache)+fib(n-2,cache)
->   return cache[n]
-<   return fib(n-1)+fib(n-2)
++ def fib(n,cache):
++   if(n in cache):
++     return cache[n]
+- def fib(n):
++   cache[n]= fib(n-1,cache)+fib(n-2,cache)
++   return cache[n]
+-   return fib(n-1)+fib(n-2)
 
 Current version: 2
 ```
