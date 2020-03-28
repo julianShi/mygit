@@ -1,0 +1,153 @@
+#!/usr/bin/python
+# href: https://github.com/julianShi/mygit
+import sys
+import os
+import json
+
+def myer(word1, word2):
+    # The Myer algorithm returns the difference between two strings or two lists
+    # Find the shortest path from word1 to word2
+    buffer=range(len(word2)+1)
+    parents=[ [0 for j in range(len(word2)+1)] for i in range(len(word1)+1) ]
+    for i in range(len(word1)):
+        parents[i+1][0]=2
+    for j in range(len(word2)):
+        parents[0][j+1]=1
+    for i in range(len(word1)):
+        prev=i+1
+        for j in range(len(word2)):
+            if(word1[i]==word2[j]):
+                curr=buffer[j]
+            else:
+                if(prev<buffer[j+1]):
+                    parents[i+1][j+1]=1
+                    curr=prev+1
+                else:
+                    parents[i+1][j+1]=2
+                    curr=buffer[j+1]+1
+            buffer[j]=prev
+            prev=curr
+        buffer[-1]=prev
+
+    # Record the shortest path
+    diff=[]
+    i=len(parents)-1
+    j=len(parents[0])-1
+    while(i>=0 and j>=0):
+        if(parents[i][j]==1):
+            # True means adding the word2[j-1] to the position i
+            diff.append([True,i,j-1,word2[j-1]])
+            j-=1
+        elif(parents[i][j]==2):
+            # False means removing from the position i-1
+            diff.append([False,i-1,j,word1[i-1]])
+            i-=1
+        else:
+            i-=1
+            j-=1
+    return diff
+
+def rollnext(word1,diff):
+    # roll to the next version
+    for step in diff:
+        if(step[0]):
+            word1=word1[:step[1]]+[step[3]]+word1[step[1]:]
+        else:
+            word1=word1[:step[1]]+word1[step[1]+1:]
+    return word1
+
+def rollback(word1,diff):
+    # roll to the previous version
+    for step in diff:
+        if(step[0]):
+            word1=word1[:step[2]]+word1[step[2]+1:]
+        else:
+            word1=word1[:step[2]]+[step[3]]+word1[step[2]:]
+    return word1
+
+def printDiff(diff):
+    # print the difference between two files
+    for step in diff[::-1]:
+        if(step[0]):
+            print("> "+step[3]),
+        else:
+            print("< "+step[3]),
+
+if __name__ == "__main__":
+    # setup
+    diffHistory=[] # All versions of the diffs of the file, from old to new
+    fileCurrent=[] # The current version of the file
+    currentVersion=0 # The version number of the current file
+    if(len(sys.argv)<3):
+        print("Syntax error! Please use the syntax:")
+        print('  ./pygit [diff|add|log|rollback|rollnext|checkout] <file>')
+        sys.exit()
+    fileName = sys.argv[2]
+    if(not os.path.isdir('.pygit')):
+        os.mkdir('.pygit')
+    # The diff versions of individual files are saved as an object in the .pygit directory
+    if(os.path.isfile('.pygit/'+fileName)):
+        with open('.pygit/'+fileName,'r') as fh:
+            metaObject=json.load(fh)
+        diffHistory=metaObject["diffHistory"]
+        fileCurrent=metaObject["fileCurrent"]
+        currentVersion=metaObject["currentVersion"]
+
+    # handle the arguments
+    if(sys.argv[1]=="diff"):
+        # Display the difference of the file to the current record
+        with open(fileName,"r") as fh:
+            file=fh.readlines()
+            diff=myer(fileCurrent,file)
+            printDiff(diff)
+    elif(sys.argv[1]=="add"):
+        # Add the changes of the file to the records
+        diffHistory=diffHistory[:currentVersion]
+        with open(fileName,"r") as fh:
+            file=fh.readlines()
+            diffHistory.append(myer(fileCurrent,file))
+            fileCurrent=file
+        currentVersion+=1
+    elif(sys.argv[1]=="log"):
+        # Display all versions of the file
+        for i in range(len(diffHistory)):
+            print("\nVersion #: "+str(i+1))
+            printDiff(diffHistory[i])
+        print("\nCurrent version: "+str(currentVersion))
+    elif(sys.argv[1]=="rollback"):
+        # Roll to the previous version of the file
+        fileCurrent=rollback(fileCurrent,diffHistory[currentVersion-1])
+        currentVersion-=1
+        with open(fileName,'w') as fh:
+            for line in fileCurrent:
+                fh.write(line)
+    elif(sys.argv[1]=="rollnext"):
+        # Roll to the next version of the file
+        fileCurrent=rollnext(fileCurrent,diffHistory[currentVersion])
+        currentVersion+=1
+        with open(fileName,'w') as fh:
+            for line in fileCurrent:
+                fh.write(line)
+    elif(sys.argv[1]=="checkout"):
+        # Move to certain version of a file. Default is the current version
+        targetVersion=currentVersion
+        if(len(sys.argv)>3):
+            targetVersion = int(sys.argv[3])
+        while(currentVersion > targetVersion):
+            fileCurrent=rollback(fileCurrent,diffHistory[currentVersion-1])
+            currentVersion-=1
+        while(currentVersion < targetVersion):
+            fileCurrent=rollnext(fileCurrent,diffHistory[currentVersion])
+            currentVersion+=1
+        with open(fileName,'w') as fh:
+            for line in fileCurrent:
+                fh.write(line)
+    else:
+        print("Syntax error! Please use the syntax:")
+        print('  ./pygit [diff|add|log|rollback|rollnext|checkout] <file>')
+
+    # Save the changes
+    with open('.pygit/'+fileName,'w+') as fh:
+        metaObject = {"diffHistory":diffHistory,"fileCurrent":fileCurrent,"currentVersion":currentVersion}
+        json.dump(metaObject,fh)
+
