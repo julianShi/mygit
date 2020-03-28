@@ -8,7 +8,7 @@ My git command that implements the Myer algorithm.
 # Setup
 Add the current path to the environment variable
 ```sh
-. setupenv.sh
+. ./setupenv.sh
 ```
 
 # Command options
